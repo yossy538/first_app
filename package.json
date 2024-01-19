@@ -10,6 +10,14 @@
   },
   "version": "0.1.0",
   "devDependencies": {
-    "webpack-dev-server": "^4.13.2"
+    "@babel/core": "^7.23.7",
+    "@babel/plugin-proposal-private-methods": "^7.18.6",
+    "webpack-dev-server": "^3"
+  },
+  "scripts": {
+    "build": "RAILS_ENV=production bin/rails webpacker:compile"
+  },
+  "engines": {
+    "node": "14.x"
   }
 }
