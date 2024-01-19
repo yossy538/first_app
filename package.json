@@ -11,10 +11,10 @@
   "version": "0.1.0",
   "devDependencies": {
     "@babel/core": "^7.23.7",
-    "@babel/plugin-proposal-private-methods": "^7.18.6",
-    "webpack-dev-server": "^3"
+    "@babel/plugin-proposal-private-property-in-object": "^7.21.11",
+    "webpack-dev-server": "^4.13.2"
   },
-  "scripts": {
+   "scripts": {
     "build": "RAILS_ENV=production bin/rails webpacker:compile"
   },
   "engines": {
