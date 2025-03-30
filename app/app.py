@@ -32,8 +32,10 @@ def get_estimates():
         for row in estimates
     ]
 
-    return jsonify(estimates_list)
-
+    return Response(
+        json.dumps(estimates_list, ensure_ascii=False),  # ← Unicode エスケープを無効化！
+        mimetype="application/json; charset=utf-8"
+    )
 
 @app.route("/api/estimates", methods=["POST"])
 def add_estimate():
@@ -74,6 +76,31 @@ def add_estimate():
 
     except Exception as e:
         return jsonify({"error": str(e)}), 500
+
+@app.route("/api/estimates/<int:estimate_id>", methods=["DELETE"])
+def delete_estimate(estimate_id):
+    """指定したIDの見積データを削除するAPI"""
+    try:
+        conn = connect_db()
+        cursor = conn.cursor()
+
+        # 指定したIDの見積データが存在するか確認
+        cursor.execute("SELECT * FROM estimates WHERE id = ?", (estimate_id,))
+        estimate = cursor.fetchone()
+
+        if not estimate:
+            return jsonify({"error": "指定された見積データが見つかりません"}), 404
+
+        # データを削除
+        cursor.execute("DELETE FROM estimates WHERE id = ?", (estimate_id,))
+        conn.commit()
+        conn.close()
+
+        return jsonify({"message": f"✅ 見積データ（ID: {estimate_id}）を削除しました！"}), 200
+
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
 
 if __name__ == "__main__":
     app.run(debug=True, host="127.0.0.1", port=5002)
