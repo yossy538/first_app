@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>見積積算システム</title>
+
+  <!-- Tabulator CDN -->
+  <link href="https://unpkg.com/tabulator-tables@5.5.0/dist/css/tabulator.min.css" rel="stylesheet">
+  <script src="https://unpkg.com/tabulator-tables@5.5.0/dist/js/tabulator.min.js"></script>
+
+  <!-- カスタムCSS -->
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+  <div class="container">
+    <h2>見積積算システム</h2>
+    <button id="add-row-btn">＋ 行を追加</button>
+    <button id="save-btn">💾 保存</button>
+
+    <div class="form-area">
+        <label for="project-name">案件名：</label>
+        <input type="text" id="project-name" placeholder="例：空調工事案件A" />
+      
+        <label for="customer-name">お客様名：</label>
+        <input type="text" id="customer-name" placeholder="例：〇〇工業株式会社" />
+      </div>
+      
+
+    <!-- 入力テーブル -->
+    <div id="tabulator-table"></div>
+
+    <!-- 合計欄 -->
+    <div class="totals">
+      <p>原価合計: <span id="total-cost">¥0</span></p>
+      <p>売価合計: <span id="total-sale">¥0</span></p>
+      <p>利益額: <span id="profit">¥0</span></p>
+      <p>利益率: <span id="profit-rate">0%</span></p>
+    </div>
+
+    <!-- 区切り線 -->
+    <hr class="section-divider" />
+
+    <!-- 保存済みの一覧 -->
+    <h3 class="section-heading">保存済みの見積一覧</h3>
+    <div id="estimate-list-table"></div>
+  </div>
+
+  <!-- カスタムJS -->
+  <script src="{{ url_for('static', filename='js/app.js') }}"></script>
+</body>
+</html>

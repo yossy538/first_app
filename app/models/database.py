@@ -3,13 +3,13 @@ import os
 
 # `estimate_app/` のルートディレクトリを取得
 BASE_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ".."))  
-DB_PATH = os.path.join(BASE_DIR, "data", "estimate.db")  # `data/estimate.db` のパス
+DB_PATH = os.path.abspath("database/estimates.db")
 
 def connect_db():
-    """SQLiteデータベースに接続する関数"""
-    if not os.path.exists(DB_PATH):
-        print(f"❌ データベースが見つかりません: {DB_PATH}")
-        return None
+    conn = sqlite3.connect(DB_PATH, check_same_thread=False)
+    conn.row_factory = sqlite3.Row
+    return conn
+
 
     conn = sqlite3.connect(DB_PATH)
     conn.row_factory = sqlite3.Row

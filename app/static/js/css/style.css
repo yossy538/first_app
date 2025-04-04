@@ -1,0 +1,91 @@
+body {
+    font-family: Arial, sans-serif;
+    margin: 20px;
+    background-color: #f8f8f8;
+  }
+  
+  h2 {
+    color: #333;
+    text-align: center;
+  }
+  
+  .container {
+    max-width: 1000px;
+    margin: 0 auto;
+    background: #fff;
+    padding: 20px;
+    border-radius: 10px;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+  }
+  
+  button {
+    margin: 10px 0;
+    padding: 10px 15px;
+    font-size: 14px;
+    cursor: pointer;
+    border: none;
+    background-color: #4CAF50;
+    color: white;
+    border-radius: 5px;
+  }
+  
+  .delete-btn {
+    color: white;
+    background-color: red;
+    border: none;
+    padding: 5px 10px;
+    cursor: pointer;
+    border-radius: 3px;
+  }
+  
+  #tabulator-table {
+    margin-top: 20px;
+  }
+  
+  /* 合計表示 */
+  .totals {
+    margin-top: 30px;
+    padding: 10px;
+    background-color: #eee;
+    border-radius: 5px;
+  }
+  
+  .totals p {
+    margin: 6px 0;
+    font-weight: bold;
+    font-size: 16px;
+  }
+
+  .section-divider {
+    margin: 40px 0;
+    border: none;
+    border-top: 1px solid #ccc;
+  }
+  
+  /* セクション区切り線 */
+.section-divider {
+    margin: 40px 0;
+    border: none;
+    border-top: 1px solid #ccc;
+  }
+  
+  /* セクションの見出し */
+  .section-heading {
+    font-size: 20px;
+    font-weight: bold;
+    margin-bottom: 15px;
+    color: #333;
+    text-align: left;
+  }
+  
+  .form-area {
+    margin-bottom: 20px;
+  }
+  .form-area label {
+    margin-right: 8px;
+  }
+  .form-area input {
+    margin-right: 20px;
+    padding: 4px 8px;
+  }
+  
