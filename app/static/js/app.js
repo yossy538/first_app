@@ -112,7 +112,9 @@ function updateTotals() {
 function initializeButtons() {
   document.getElementById("add-row-btn").addEventListener("click", addNewRow);
   document.getElementById("save-btn").addEventListener("click", saveEstimate);
+  document.getElementById("apply-profit-rate-btn").addEventListener("click", applyProfitRateToAllRows); // ← これ追加！！
 }
+
 
 // ✅ 新しい行を追加
 function addNewRow() {
@@ -358,4 +360,24 @@ function collapseRow(row) {
   expandElements.forEach(el => el.remove());
 }
 
+// ✅ 目標利益率をすべてに再適用する関数
+function applyProfitRateToAllRows() {
+  const targetProfitRate = parseFloat(document.getElementById("target-profit-rate").value) || 0;
+  const rows = detailTable.getRows();
+
+  rows.forEach(row => {
+    const data = row.getData();
+    if (data.cost_price > 0) {
+      const newSalePrice = Math.ceil(data.cost_price * (100 + targetProfitRate) / 100);
+      row.update({
+        sale_price: newSalePrice,
+        cost_subtotal: (parseFloat(data.quantity) || 0) * (parseFloat(data.cost_price) || 0),
+        subtotal: (parseFloat(data.quantity) || 0) * newSalePrice,
+      });
+    }
+  });
+
+  updateTotals();
+  alert("✅ 目標利益率をすべてに再適用しました！");
+}
 
