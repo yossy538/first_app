@@ -15,13 +15,10 @@ DB_PATH = os.path.join(os.path.dirname(__file__), "..", "database", "estimates.d
 
 app = Flask(__name__)
 
-def get_db_connection():
-    conn = sqlite3.connect('database/estimates.db')
-    conn.row_factory = sqlite3.Row
-    return conn
+
 
 def alter_table():
-    conn = sqlite3.connect(DB_PATH)
+    conn = connect_db()
     cursor = conn.cursor()
 
     # 必要なカラムがなければ追加する
@@ -215,6 +212,67 @@ def update_estimate(estimate_id):
     except Exception as e:
         print("更新エラー:", e)
         return jsonify({"error": str(e)}), 500
+
+    
+@app.route("/api/estimates", methods=["POST"])
+def create_estimate():
+    try:
+        conn = connect_db()
+        cursor = conn.cursor()
+
+        data = request.get_json()
+        print("POST受信データ:", data)
+
+        total_profit = data["total_list_price"] - data["total_cost"]
+        profit_rate_cost = (total_profit / data["total_list_price"] * 100) if data["total_list_price"] > 0 else 0
+        profit_rate_list = (total_profit / data["total_cost"] * 100) if data["total_cost"] > 0 else 0  # ←これ追加！！
+        discount_rate = ((data["total_list_price"] - data["total_cost"]) / data["total_list_price"] * 100) if data["total_list_price"] > 0 else 0
+
+
+        cursor.execute("""
+            INSERT INTO estimates (project_name, customer_name, total_cost, total_list_price, total_profit, profit_rate_cost, profit_rate_list, discount_rate, quantity)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+        """, (
+            data["project_name"],
+            data["customer_name"],
+            data["total_cost"],
+            data["total_list_price"],
+            total_profit,
+            profit_rate_cost,
+            profit_rate_list,
+            discount_rate,  # ここ忘れず！
+            data["quantity"]
+        ))
+
+
+        new_estimate_id = cursor.lastrowid  # ← 新しいIDも取れる！
+
+        # 明細（details）も登録する
+        for detail in data["details"]:
+            cursor.execute("""
+                INSERT INTO estimate_details (estimate_id, item, model, quantity, unit, cost_price, sale_price, cost_subtotal, subtotal)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+            """, (
+                new_estimate_id,
+                detail.get("item", ""),
+                detail.get("model", ""),
+                detail.get("quantity", 0),
+                detail.get("unit", ""),
+                detail.get("cost_price", 0),
+                detail.get("sale_price", 0),
+                detail.get("cost_subtotal", 0),
+                detail.get("subtotal", 0)
+            ))
+
+        conn.commit()
+        conn.close()
+
+        return jsonify({"message": "✅ 新しい見積を保存しました！"})
+
+    except Exception as e:
+        print("保存エラー:", e)
+        return jsonify({"error": str(e)}), 500
+
 
     
     
