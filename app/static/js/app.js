@@ -180,22 +180,46 @@ function saveEstimate() {
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(payload),
   })
-    .then(response => response.json())
-    .then(result => {
-      if (result.message) {
-        alert(estimateId ? "✏️ 編集が完了しました！" : "✅ 新規見積を保存しました！");
+  .then(response => response.json())
+  .then(result => {
+    if (result.message) {
+      if (estimateId) {
+        // ✨ 編集モードなら明細も更新する
+        const realEstimateId = estimateId || result.id;  // ★ここでちゃんとID決める！
+
+        fetch(`/api/estimate_details/${realEstimateId}`, {  // ★必ず存在するIDでリクエスト！
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ details }),
+        })
+        
+        .then(res => res.json())
+        .then(() => {
+          alert("✏️ 編集が完了しました！");
+          detailTable._editingEstimateId = null;
+          updateTotals();
+          loadSavedEstimates();
+        })
+        .catch(err => {
+          alert("❌ 明細更新に失敗しました…");
+          console.error(err);
+        });
+      } else {
+        alert("✅ 新規見積を保存しました！");
         detailTable._editingEstimateId = null;
         updateTotals();
         loadSavedEstimates();
-      } else {
-        alert("❌ 保存に失敗しました…");
       }
-    })
-    .catch(error => {
-      alert("❌ 通信エラー");
-      console.error("通信エラー:", error);
-    });
+    } else {
+      alert("❌ 保存に失敗しました…");
+    }
+  })
+  .catch(error => {
+    alert("❌ 通信エラー");
+    console.error("通信エラー:", error);
+  });
 }
+  
 
 // ✅ 保存済み見積一覧ロード
 function loadSavedEstimates() {

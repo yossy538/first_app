@@ -57,35 +57,35 @@ def home():
 
 
 # app.py に追加
-@app.route("/api/estimate_details/<int:estimate_id>", methods=["GET"])
-def get_estimate_details(estimate_id):
+@app.route("/api/estimates", methods=["GET"])
+def get_estimates():
     try:
         conn = connect_db()
         cursor = conn.cursor()
 
         cursor.execute("""
-            SELECT item, model, quantity, unit, cost_price, sale_price, cost_subtotal, subtotal
-            FROM estimate_details
-            WHERE estimate_id = ?
-        """, (estimate_id,))
-        details = cursor.fetchall()
+            SELECT 
+                id, project_name, customer_name, total_cost, total_list_price, quantity
+            FROM estimates
+            ORDER BY id DESC
+        """)
+        rows = cursor.fetchall()
         conn.close()
 
-        details_list = [dict(
-            item=row[0],
-            model=row[1],
-            quantity=row[2],
-            unit=row[3],
-            cost_price=row[4],
-            sale_price=row[5],
-            cost_subtotal=row[6],
-            subtotal=row[7],
-        ) for row in details]
+        estimates = [dict(
+            id=row[0],
+            project_name=row[1],
+            customer_name=row[2],
+            total_cost=row[3],
+            total_list_price=row[4],
+            quantity=row[5]
+        ) for row in rows]
 
-        return jsonify(details_list)
+        return jsonify(estimates)
 
     except Exception as e:
         return jsonify({"error": str(e)}), 500
+
 
 
         # データをJSON形式に変換（🔥 `quantity` を追加！）
