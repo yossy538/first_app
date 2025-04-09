@@ -1,37 +1,58 @@
 let detailTable;
 let listTable;
 
-document.addEventListener("DOMContentLoaded", () => {
-  initializeDetailTable();
-  initializeButtons();
-  loadSavedEstimates();
-});
+window.onload = () => {
+  console.log("ページが完全に読み込まれました！");
 
-// ✅ 明細テーブル初期化
-function initializeDetailTable() {
-  detailTable = new Tabulator("#tabulator-table", {
-    height: "400px",
-    data: [],
-    layout: "fitColumns",
-    reactiveData: true,
-    columns: [
-      { title: "項目", field: "item", editor: "input" },
-      { title: "品番・型番", field: "model", editor: "input" },
-      { title: "数量", field: "quantity", editor: "number", bottomCalc: "sum" },
-      { title: "単位", field: "unit", editor: "input" },
-      { title: "原価（仕入れ）", field: "cost_price", editor: "number", bottomCalc: "sum" },
-      { title: "売価（単価）", field: "sale_price", editor: "number", bottomCalc: "sum" },
-      { title: "原価小計", field: "cost_subtotal", bottomCalc: "sum", formatter: cell => Math.round(cell.getValue()).toLocaleString() },
-      { title: "小計（売価）", field: "subtotal", bottomCalc: "sum", formatter: cell => Math.round(cell.getValue()).toLocaleString() },
-    ],
-    cellEdited: onCellEdited,
-    dataChanged: updateTotals,
+  initializeDetailTable()
+    .then(() => {
+      console.log("Tabulator初期化完了！");
+      
+      document.getElementById("add-row-btn").addEventListener("click", () => {
+        console.log("＋行を追加ボタンがクリックされました！");
+        addNewRow();
+      });
+
+      document.getElementById("save-btn").addEventListener("click", () => {
+        console.log("保存ボタンがクリックされました！");
+        saveEstimate();
+      });
+
+      document.getElementById("apply-profit-rate-btn").addEventListener("click", () => {
+        console.log("目標利益率を適用ボタンがクリックされました！");
+        applyProfitRateToAllRows();
+      });
+
+      // ⭐ここコメントアウト！
+      // loadSavedEstimates();  ← いったん呼ばない
+    })
+    .catch((error) => {
+      console.error("Tabulator 初期化エラー:", error);
+    });
+};
+
+
+// ✅ 合計更新
+function updateTotals() {
+  const data = detailTable.getData();
+  let totalCost = 0;
+  let totalSale = 0;
+
+  data.forEach(row => {
+    totalCost += (row.quantity || 0) * (row.cost_price || 0);
+    totalSale += (row.quantity || 0) * (row.sale_price || 0);
   });
 
-  detailTable.on("cellEditBlur", onCellEditBlur);
+  const profit = totalSale - totalCost;
+  const profitRate = totalSale > 0 ? ((profit / totalSale) * 100).toFixed(1) : "0";
+
+  document.getElementById("total-cost").textContent = `¥${totalCost.toLocaleString()}`;
+  document.getElementById("total-sale").textContent = `¥${totalSale.toLocaleString()}`;
+  document.getElementById("profit").textContent = `¥${profit.toLocaleString()}`;
+  document.getElementById("profit-rate").textContent = `${profitRate}%`;
 }
 
-// ✅ セル編集時
+// ✅ セル編集時に呼び出される関数
 function onCellEdited(cell) {
   const field = cell.getField();
   const data = cell.getRow().getData();
@@ -45,7 +66,6 @@ function onCellEdited(cell) {
       subtotal: (parseFloat(data.quantity) || 0) * newSalePrice,
     });
   } else if (field === "sale_price" || field === "quantity") {
-    // 🌟 sale_price または quantity 編集時も subtotal再計算する！
     cell.getRow().update({
       cost_subtotal: (parseFloat(data.quantity) || 0) * (parseFloat(data.cost_price) || 0),
       subtotal: (parseFloat(data.quantity) || 0) * (parseFloat(data.sale_price) || 0),
@@ -54,6 +74,54 @@ function onCellEdited(cell) {
 
   updateTotals();
 }
+
+
+
+
+function initializeDetailTable() {
+  return new Promise((resolve, reject) => {
+    console.log("Tabulator 初期化開始...");
+
+    detailTable = new Tabulator("#tabulator-table", {
+      height: "400px",
+      data: [],
+      layout: "fitColumns",
+      reactiveData: true,
+      columns: [
+        { title: "項目", field: "item", editor: "input" },
+        { title: "品番・型番", field: "model", editor: "input" },
+        { title: "数量", field: "quantity", editor: "number", bottomCalc: "sum" },
+        { title: "単位", field: "unit", editor: "input" },
+        { title: "原価（仕入れ）", field: "cost_price", editor: "number", bottomCalc: "sum" },
+        { title: "売価（単価）", field: "sale_price", editor: "number", bottomCalc: "sum" },
+        { title: "原価小計", field: "cost_subtotal", bottomCalc: "sum", formatter: cell => Math.round(cell.getValue()).toLocaleString() },
+        { title: "小計（売価）", field: "subtotal", bottomCalc: "sum", formatter: cell => Math.round(cell.getValue()).toLocaleString() },
+      ],
+      cellEdited: onCellEdited,
+      dataChanged: updateTotals,
+    });
+
+    console.log("Tabulator 初期化完了！");
+    resolve();  // ← テーブル作り終わったらここでresolveするだけ！
+  });
+}
+
+
+
+
+
+document.addEventListener("DOMContentLoaded", () => {
+  initializeDetailTable()
+    .then(() => {
+      console.log("detailTable:", detailTable); // 初期化後に確認
+      initializeButtons(); // ボタンの初期化
+      loadSavedEstimates(); // 保存済み見積もり一覧を読み込む
+    })
+    .catch((error) => {
+      console.error("テーブル初期化エラー:", error);
+    });
+});
+
 
 
 
@@ -88,25 +156,7 @@ function autoCalculateRow(row, data) {
 }
 
 
-// ✅ 合計更新
-function updateTotals() {
-  const data = detailTable.getData();
-  let totalCost = 0;
-  let totalSale = 0;
 
-  data.forEach(row => {
-    totalCost += (row.quantity || 0) * (row.cost_price || 0);
-    totalSale += (row.quantity || 0) * (row.sale_price || 0);
-  });
-
-  const profit = totalSale - totalCost;
-  const profitRate = totalSale > 0 ? ((profit / totalSale) * 100).toFixed(1) : "0";
-
-  document.getElementById("total-cost").textContent = `¥${totalCost.toLocaleString()}`;
-  document.getElementById("total-sale").textContent = `¥${totalSale.toLocaleString()}`;
-  document.getElementById("profit").textContent = `¥${profit.toLocaleString()}`;
-  document.getElementById("profit-rate").textContent = `${profitRate}%`;
-}
 
 // ✅ ボタン初期化
 function initializeButtons() {
@@ -161,6 +211,15 @@ function saveEstimate() {
       subtotal: qty * sale,
     };
   });
+
+// static/js/app.js
+
+
+// 🌟 「＋ 行を追加」ボタンの処理
+document.getElementById("add-row-btn").addEventListener("click", function() {
+  table.addRow({});
+});
+
 
   const payload = {
     project_name: document.getElementById("project-name").value || "未入力案件",
@@ -289,7 +348,7 @@ function loadSavedEstimates() {
                   .then(result => {
                     if (result.message) {
                       alert("✅ 削除しました！");
-                      loadSavedEstimates();
+                      // loadSavedEstimates();
                     } else {
                       alert("❌ 削除に失敗しました…");
                     }
@@ -401,6 +460,7 @@ function applyProfitRateToAllRows() {
     }
   });
 
+  
   updateTotals();
   alert("✅ 目標利益率をすべてに再適用しました！");
 }

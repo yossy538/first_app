@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <title>保存済み見積一覧</title>
+
+  <!-- Tabulator 6.2.1 -->
+  <link href="https://cdn.jsdelivr.net/npm/tabulator-tables@6.2.1/dist/css/tabulator.min.css" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/tabulator-tables@6.2.1/dist/js/tabulator.min.js"></script>
+
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+  <div class="container">
+    <h2>保存済み見積一覧</h2>
+    <a href="/">📝 新しい見積を作成</a>
+
+    <div id="estimate-list-table" style="margin-top:20px;"></div>
+  </div>
+
+  <script src="{{ url_for('static', filename='js/list.js') }}"></script>
+</body>
+</html>

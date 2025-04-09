@@ -7,6 +7,10 @@ import sqlite3
 # `models/` ディレクトリを `sys.path` に追加
 sys.path.append(os.path.abspath(os.path.dirname(__file__)))
 
+from app.routes.main import main_bp
+app.register_blueprint(main_bp)
+
+
 from models.database import connect_db  # データベース接続
 
 # app.py のこの部分を👇に書き換える

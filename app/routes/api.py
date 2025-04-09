@@ -123,3 +123,26 @@ def update_estimate_details(estimate_id):
 
     db.session.commit()
     return jsonify({"message": "明細更新完了！"})
+
+# ✅ 見積＋明細を削除
+@api_bp.route('/estimates/<int:estimate_id>', methods=['DELETE'])  # ←ここが大事！
+def delete_estimate(estimate_id):
+    try:
+        # 見積ヘッダー取得
+        estimate = Estimate.query.get(estimate_id)
+        if not estimate:
+            return jsonify({"message": "対象の見積が存在しません"}), 404
+
+        # 明細データをまず全部削除
+        EstimateDetail.query.filter_by(estimate_id=estimate_id).delete()
+
+        # 見積ヘッダーを削除
+        db.session.delete(estimate)
+
+        db.session.commit()
+        return jsonify({"message": "見積と明細を削除しました！"})
+
+    except Exception as e:
+        print(f"削除エラー: {e}")
+        return jsonify({"message": "削除に失敗しました", "error": str(e)}), 500
+
