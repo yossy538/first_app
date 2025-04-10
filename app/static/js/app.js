@@ -2,6 +2,41 @@ let detailTable;
 let listTable;
 
 window.onload = () => {
+
+  // URLパラメータからedit_idを取得
+const urlParams = new URLSearchParams(window.location.search);
+const editId = urlParams.get('edit_id');
+
+if (editId) {
+  console.log("編集モード: edit_id =", editId);
+
+  // APIからデータを取ってきてテーブルにセット
+  fetch(`/api/estimate_details/${editId}`)
+    .then(response => response.json())
+    .then(data => {
+      console.log("取得した明細データ:", data);
+
+      // テーブルにデータをセット
+      detailTable.replaceData(data.map(d => ({
+        item: d.item,
+        model: d.model,
+        quantity: d.quantity,
+        unit: d.unit,
+        cost_price: d.cost_price,
+        sale_price: d.sale_price,
+        cost_subtotal: d.cost_subtotal,
+        subtotal: d.subtotal,
+      })));
+
+      detailTable._editingEstimateId = editId; // 編集モードに切り替える
+      updateTotals(); // 合計も更新する
+    })
+    .catch(error => {
+      console.error("明細データ取得エラー:", error);
+      alert("❌ 編集データ取得に失敗しました…");
+    });
+}
+
   console.log("ページが完全に読み込まれました！");
 
   initializeDetailTable()
@@ -282,6 +317,10 @@ document.getElementById("add-row-btn").addEventListener("click", function() {
 
 // ✅ 保存済み見積一覧ロード
 function loadSavedEstimates() {
+  if (!document.getElementById("estimate-list-table")) {
+    // id="estimate-list-table" が無いなら、ここでは何もしない
+    return;
+  }
   fetch("/api/estimates")
     .then(response => response.json())
     .then(data => {

@@ -10,6 +10,10 @@ sys.path.append(os.path.abspath(os.path.dirname(__file__)))
 from app.routes.main import main_bp
 app.register_blueprint(main_bp)
 
+from app.routes.api import api_bp  # 追加
+app.register_blueprint(api_bp)     # 追加
+
+
 
 from models.database import connect_db  # データベース接続
 
