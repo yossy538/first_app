@@ -17,24 +17,24 @@
 <body>
   <div class="container">
     <h2>見積積算システム</h2>
-    <a href="/list">
-      <button id="to-list-btn">📄 保存済み一覧へ</button>
-    </a>
+  
+    <button id="to-list-btn" onclick="location.href='/list'">📄 保存済み一覧へ</button>
     <button id="add-row-btn">＋ 行を追加</button>
     <button id="save-btn">💾 保存</button>
     <button id="apply-profit-rate-btn">📈 目標利益率を適用</button>
-
+  
     <div class="form-area">
       <label for="project-name">案件名：</label>
       <input type="text" id="project-name" placeholder="例：空調工事案件A" />
-
+  
       <label for="customer-name">お客様名：</label>
       <input type="text" id="customer-name" placeholder="例：〇〇工業株式会社" />
-
+  
       <label for="target-profit-rate">目標利益率（%）：</label>
       <input type="number" id="target-profit-rate" value="30" />
     </div>
-
+  </div>
+  
     <div id="tabulator-table"></div>
 
     <div class="totals">
