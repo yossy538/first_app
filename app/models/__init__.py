@@ -43,17 +43,45 @@ class Estimate(db.Model):
             if field in data:
                 setattr(self, field, data[field])
 
-# ここ重要！！
 class EstimateDetail(db.Model):
     __tablename__ = 'estimate_details'
 
     id = db.Column(db.Integer, primary_key=True)
-    estimate_id = db.Column(db.Integer, db.ForeignKey('estimates.id'))
+    estimate_id = db.Column(db.Integer, db.ForeignKey('estimates.id'), nullable=False)
     item = db.Column(db.String(255))
     model = db.Column(db.String(255))
     quantity = db.Column(db.Integer)
     unit = db.Column(db.String(50))
-    cost_price = db.Column(db.Integer)
-    sale_price = db.Column(db.Integer)
-    cost_subtotal = db.Column(db.Integer)
-    subtotal = db.Column(db.Integer)
+    cost_price = db.Column(db.Float)
+    sale_price = db.Column(db.Float)
+    cost_subtotal = db.Column(db.Float)
+    subtotal = db.Column(db.Float)
+
+    def to_dict(self):
+        return {
+            "id": self.id,
+            "estimate_id": self.estimate_id,
+            "item": self.item,
+            "model": self.model,
+            "quantity": self.quantity,
+            "unit": self.unit,
+            "cost_price": self.cost_price,
+            "sale_price": self.sale_price,
+            "cost_subtotal": self.cost_subtotal,
+            "subtotal": self.subtotal,
+        }
+
+    @classmethod
+    def from_dict(cls, data):
+        return cls(
+            estimate_id=data.get("estimate_id"),
+            item=data.get("item"),
+            model=data.get("model"),
+            quantity=data.get("quantity"),
+            unit=data.get("unit"),
+            cost_price=data.get("cost_price"),
+            sale_price=data.get("sale_price"),
+            cost_subtotal=data.get("cost_subtotal"),
+            subtotal=data.get("subtotal"),
+        )
+

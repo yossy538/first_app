@@ -1,27 +1,28 @@
 import os
 import sys
-from flask import Flask, Response, jsonify, render_template, request  # ← `request` を追加！
-import json
-import sqlite3
+from flask import Flask
+from app.models import db    # ここでSQLAlchemyを使う！
 
-# `models/` ディレクトリを `sys.path` に追加
-sys.path.append(os.path.abspath(os.path.dirname(__file__)))
+# アプリ生成
+app = Flask(__name__)
 
+# SQLAlchemy設定
+app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///../database/estimates.db'
+app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+
+# DB初期化
+db.init_app(app)
+
+# Blueprint登録
 from app.routes.main import main_bp
+from app.routes.api import api_bp
 app.register_blueprint(main_bp)
+app.register_blueprint(api_bp)
 
-from app.routes.api import api_bp  # 追加
-app.register_blueprint(api_bp)     # 追加
-
-
-
-from models.database import connect_db  # データベース接続
-
-# app.py のこの部分を👇に書き換える
+# DBのパス
 DB_PATH = os.path.join(os.path.dirname(__file__), "..", "database", "estimates.db")
 
 
-app = Flask(__name__)
 
 
 
@@ -44,21 +45,22 @@ def alter_table():
 
 @app.route("/")
 def home():
-    """見積データをWebページで表示"""
-    conn = connect_db()
-    cursor = conn.cursor()
-    cursor.execute("SELECT id, project_name, customer_name, total_cost, total_list_price, total_profit, profit_rate_cost, profit_rate_list, discount_rate, quantity FROM estimates")
-    estimates = cursor.fetchall()
-    conn.close()
+    estimates = Estimate.query.all()  # ← SQL書かなくても全部取得できる！
 
-    # データを辞書リストに変換（HTML に渡せる形に）
     estimates_list = [
-        dict(id=row[0], project_name=row[1], customer_name=row[2],
-                total_cost=row[3], total_list_price=row[4],
-                total_profit=row[5], profit_rate_cost=row[6],
-                profit_rate_list=row[7], discount_rate=row[8],
-                quantity=row[9])  # 🔥 ここで `quantity` を含める
-        for row in estimates
+        {
+            "id": e.id,
+            "project_name": e.project_name,
+            "customer_name": e.customer_name,
+            "total_cost": e.total_cost,
+            "total_list_price": e.total_list_price,
+            "total_profit": e.total_profit,
+            "profit_rate_cost": e.profit_rate_cost,
+            "profit_rate_list": e.profit_rate_list,
+            "discount_rate": e.discount_rate,
+            "quantity": e.quantity,
+        }
+        for e in estimates
     ]
 
     return render_template("index.html", estimates=estimates_list)
@@ -284,47 +286,6 @@ def create_estimate():
 
     
     
-@app.route("/api/estimates", methods=["GET"])
-def get_estimates():
-    """保存済み見積の一覧を返すAPI"""
-    try:
-        conn = connect_db()
-        cursor = conn.cursor()
-
-        cursor.execute("""
-            SELECT 
-                e.id,
-                e.project_name,
-                e.customer_name,
-                e.total_cost,
-                e.total_list_price,
-                e.quantity,
-                (e.total_list_price - e.total_cost) as total_profit,
-                CASE WHEN e.total_list_price > 0 THEN
-                    ROUND((e.total_list_price - e.total_cost) * 100.0 / e.total_list_price, 1)
-                ELSE 0 END as profit_rate_cost
-            FROM estimates e
-            ORDER BY e.id DESC
-        """)
-        rows = cursor.fetchall()
-        conn.close()
-
-        # 辞書形式に直して返す
-        estimates = [dict(
-            id=row[0],
-            project_name=row[1],
-            customer_name=row[2],
-            total_cost=row[3],
-            total_list_price=row[4],
-            quantity=row[5],
-            total_profit=row[6],
-            profit_rate_cost=row[7],
-        ) for row in rows]
-
-        return jsonify(estimates)
-
-    except Exception as e:
-        return jsonify({"error": str(e)}), 500
 
 
 

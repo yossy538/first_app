@@ -1,4 +1,6 @@
 let detailTable;
+let table;  // グローバル変数としてTabulatorインスタンス用意
+
 
 // URLからedit_idを取得
 function getEditIdFromUrl() {
@@ -11,19 +13,34 @@ document.addEventListener("DOMContentLoaded", () => {
   console.log("ページが完全に読み込まれました！");
 
   initializeDetailTable()
-    .then(() => {
-      console.log("Tabulator初期化完了！");
-      initializeButtons();
+  .then(() => {
+    console.log("Tabulator初期化完了！");
+    initializeButtons();
 
-      const editId = getEditIdFromUrl();
-      if (editId) {
-        console.log("編集モード開始: edit_id =", editId);
-        loadEstimateData(editId);
-      }
-    })
-    .catch((error) => {
-      console.error("Tabulator初期化エラー:", error);
-    });
+    const editId = getEditIdFromUrl();
+    if (editId) {
+      console.log("編集モード開始: edit_id =", editId);
+      loadEstimateData(editId);  // ヘッダー情報の取得
+
+      // 🔥 明細データも読み込む処理を追加！！
+      fetch(`/api/estimate_details/${editId}`)
+        .then(response => response.json())
+        .then(details => {
+          console.log("明細データ取得完了:", details);
+          detailTable.setData(details);  // ✅ここ！detailTableに流し込む！
+
+          // 🔥 合計再計算もここで呼ぶ！
+          updateTotals();
+        })
+        .catch(error => {
+          console.error("明細データ取得エラー:", error);
+        });
+    }
+  })
+  .catch((error) => {
+    console.error("Tabulator初期化エラー:", error);
+  });
+
 });
 
 // Tabulator初期化
