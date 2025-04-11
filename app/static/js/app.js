@@ -1,5 +1,6 @@
 let detailTable;
 let table;  // グローバル変数としてTabulatorインスタンス用意
+let isEdited = false;  // 🌟 編集されたかどうか記憶するグローバル変数！
 
 
 // URLからedit_idを取得
@@ -28,6 +29,8 @@ document.addEventListener("DOMContentLoaded", () => {
         .then(details => {
           console.log("明細データ取得完了:", details);
           detailTable.setData(details);  // ✅ここ！detailTableに流し込む！
+
+          recalcProfitRates();  // 🌟ここで利益額・利益率を再計算する！！
 
           // 🔥 合計再計算もここで呼ぶ！
           updateTotals();
@@ -61,14 +64,35 @@ function initializeDetailTable() {
           title: "原価小計", 
           field: "cost_subtotal", 
           bottomCalc: "sum", 
-          formatter: cell => Math.round(cell.getValue() || 0).toLocaleString() 
+          formatter: cell => Math.round(cell.getValue() || 0).toLocaleString()
         },
         { 
           title: "小計（売価）", 
           field: "subtotal", 
           bottomCalc: "sum", 
-          formatter: cell => Math.round(cell.getValue() || 0).toLocaleString() 
+          formatter: cell => Math.round(cell.getValue() || 0).toLocaleString()
         },
+        
+          { 
+            title: "利益額", 
+            field: "profit_amount",
+            formatter: (cell) => {
+              const data = cell.getData();
+              const costSubtotal = data.cost_subtotal || 0;
+              const subtotal = data.subtotal || 0;
+              const profit = subtotal - costSubtotal;
+          
+              if (profit < 0) {
+                return `<span style="color: red;">¥${Math.round(profit).toLocaleString()}</span>`;
+              } else {
+                return `¥${Math.round(profit).toLocaleString()}`;
+              }
+            },
+            bottomCalc: "sum",
+            hozAlign: "right",
+            headerSort: false
+          },
+          
         { 
           title: "利益率（%）", 
           field: "profit_rate",
@@ -77,11 +101,11 @@ function initializeDetailTable() {
             const costPrice = data.cost_price || 0;
             const salePrice = data.sale_price || 0;
             let display = "-";
-
+        
             if (salePrice > 0) {
               const profitRate = ((salePrice - costPrice) / salePrice) * 100;
               const formattedRate = profitRate.toFixed(1) + "%";
-
+        
               if (profitRate < 0) {
                 display = `<span style="color: red;">${formattedRate}</span>`;
               } else if (profitRate <= 20) {
@@ -95,6 +119,7 @@ function initializeDetailTable() {
           hozAlign: "center",
           headerSort: false
         },
+        
         { 
           title: "操作", 
           formatter: "buttonCross", 
@@ -198,6 +223,7 @@ function saveEstimate() {
     .then(result => {
       if (result.message) {
         alert(editId ? "✏️ 更新完了！" : "✅ 新規保存完了！");
+        isEdited = false;  // 🌟ここに追加！！！
         window.location.href = "/list"; // 保存後はリスト画面へ移動
       } else {
         alert("❌ 保存に失敗しました…");
@@ -260,19 +286,33 @@ function onCellEdited(cell) {
       subtotal: (data.quantity || 0) * (data.sale_price || 0),
     });
     updateTotals();
+    isEdited = true;
   }
 }
 
-// ボタン初期化
+
+
+// ✅ ボタン初期化
 function initializeButtons() {
   document.getElementById("add-row-btn").addEventListener("click", addNewRow);
   document.getElementById("save-btn").addEventListener("click", saveEstimate);
   document.getElementById("apply-profit-rate-btn").addEventListener("click", applyProfitRateToAllRows);
   document.getElementById('recalc-profit-rate-btn').addEventListener('click', recalcProfitRates);
 
+  // 🌟 保存済み一覧へ戻るボタンも警告制御
+  document.getElementById("to-list-btn").addEventListener("click", function(e) {
+    if (isEdited) {
+      const confirmLeave = confirm("保存されていません。本当に一覧に戻りますか？");
+      if (!confirmLeave) {
+        e.preventDefault();
+        return;
+      }
+    }
+    window.location.href = "/list";
+  });
 }
 
-// 行を追加
+// ✅ 行を追加する
 function addNewRow() {
   detailTable.addRow({
     item: "",
@@ -284,9 +324,10 @@ function addNewRow() {
     cost_subtotal: 0,
     subtotal: 0,
   });
+  isEdited = true; // 🌟 行追加したら編集フラグON！
 }
 
-// 目標利益率を再適用
+// ✅ 目標利益率を再適用
 function applyProfitRateToAllRows() {
   const targetProfitRate = parseFloat(document.getElementById("target-profit-rate").value) || 0;
   detailTable.getRows().forEach(row => {
@@ -301,19 +342,28 @@ function applyProfitRateToAllRows() {
     }
   });
   updateTotals();
+  isEdited = true; // 🌟 再適用しても編集フラグON！
   alert("✅ 目標利益率を適用しました！");
 }
+
+// ✅ 利益率＋利益額を再計算する
 function recalcProfitRates() {
   const rows = detailTable.getRows();
+  let hasNegativeProfit = false;  // 🌟 マイナス利益チェック用
+
   rows.forEach(row => {
     const data = row.getData();
     const costPrice = data.cost_price || 0;
     const salePrice = data.sale_price || 0;
     const quantity = data.quantity || 0;
 
-    // 🔥 新しく cost_subtotal, subtotal を再計算！
     const costSubtotal = quantity * costPrice;
     const subtotal = quantity * salePrice;
+    const profitAmount = subtotal - costSubtotal;
+
+    if (profitAmount < 0) {
+      hasNegativeProfit = true;  // 🌟 どこかで赤字あれば記録
+    }
 
     let profitRate = "-";
     if (salePrice > 0) {
@@ -321,18 +371,45 @@ function recalcProfitRates() {
       profitRate = profitRate.toFixed(1) + "%";
     }
 
-    // 🔥 全部まとめて row.update する！
     row.update({
       cost_subtotal: costSubtotal,
       subtotal: subtotal,
-      profit_rate: profitRate
+      profit_amount: profitAmount,
+      profit_rate: profitRate,
     });
   });
 
-  updateTotals();  // 最後に合計も更新！！
+  updateTotals();
+  isEdited = true; // 🌟 再計算も編集扱いにしとく！
+  console.log("✅ 明細利益率＋利益額＋小計金額＋合計すべて再計算しました！");
 
-  console.log("✅ 明細利益率＋小計金額＋合計すべて再計算しました！");
+  // 🌟 再計算が終わったあとに赤字チェックしてアラート！
+  if (hasNegativeProfit) {
+    alert("⚠️ 利益額がマイナスになっている項目があります。内容を確認してください！");
+  }
 }
 
 
+// ✅ セル編集時に編集フラグを立てる
+function onCellEdited(cell) {
+  const field = cell.getField();
+  const data = cell.getRow().getData();
+
+  if (field === "cost_price" || field === "quantity" || field === "sale_price") {
+    cell.getRow().update({
+      cost_subtotal: (data.quantity || 0) * (data.cost_price || 0),
+      subtotal: (data.quantity || 0) * (data.sale_price || 0),
+    });
+    updateTotals();
+    isEdited = true; // 🌟 何か変更があったら保存警告出す
+  }
+}
+
+// ✅ ページ離脱時にアラート出す
+window.addEventListener('beforeunload', function (e) {
+  if (isEdited) {
+    e.preventDefault();
+    e.returnValue = '';
+  }
+});
 
