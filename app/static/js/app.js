@@ -57,8 +57,54 @@ function initializeDetailTable() {
         { title: "単位", field: "unit", editor: "input" },
         { title: "原価（仕入れ）", field: "cost_price", editor: "number", bottomCalc: "sum" },
         { title: "売価（単価）", field: "sale_price", editor: "number", bottomCalc: "sum" },
-        { title: "原価小計", field: "cost_subtotal", bottomCalc: "sum", formatter: cell => Math.round(cell.getValue() || 0).toLocaleString() },
-        { title: "小計（売価）", field: "subtotal", bottomCalc: "sum", formatter: cell => Math.round(cell.getValue() || 0).toLocaleString() },
+        { 
+          title: "原価小計", 
+          field: "cost_subtotal", 
+          bottomCalc: "sum", 
+          formatter: cell => Math.round(cell.getValue() || 0).toLocaleString() 
+        },
+        { 
+          title: "小計（売価）", 
+          field: "subtotal", 
+          bottomCalc: "sum", 
+          formatter: cell => Math.round(cell.getValue() || 0).toLocaleString() 
+        },
+        { 
+          title: "利益率（%）", 
+          field: "profit_rate",
+          formatter: (cell) => {
+            const data = cell.getData();
+            const costPrice = data.cost_price || 0;
+            const salePrice = data.sale_price || 0;
+            let display = "-";
+
+            if (salePrice > 0) {
+              const profitRate = ((salePrice - costPrice) / salePrice) * 100;
+              const formattedRate = profitRate.toFixed(1) + "%";
+
+              if (profitRate < 0) {
+                display = `<span style="color: red;">${formattedRate}</span>`;
+              } else if (profitRate <= 20) {
+                display = `<span style="color: orange;">${formattedRate}</span>`;
+              } else {
+                display = `<span style="color: black;">${formattedRate}</span>`;
+              }
+            }
+            return display;
+          },
+          hozAlign: "center",
+          headerSort: false
+        },
+        { 
+          title: "操作", 
+          formatter: "buttonCross", 
+          width: 100, 
+          hozAlign: "center",   // ✅ここが正解！！
+          headerSort: false,
+          cellClick: function(e, cell) {
+            cell.getRow().delete();  // ❌ボタン押した行を即削除！
+          }
+        }
       ],
       cellEdited: onCellEdited,
       dataChanged: updateTotals,
@@ -66,6 +112,9 @@ function initializeDetailTable() {
     resolve();
   });
 }
+
+
+
 
 // フォームに見積データを読み込む
 function loadEstimateData(editId) {
@@ -174,11 +223,31 @@ function updateTotals() {
   const profit = totalSale - totalCost;
   const profitRate = totalSale > 0 ? ((profit / totalSale) * 100).toFixed(1) : "0";
 
+  // 💡合計数字を画面に出す
   document.getElementById("total-cost").textContent = `¥${totalCost.toLocaleString()}`;
   document.getElementById("total-sale").textContent = `¥${totalSale.toLocaleString()}`;
   document.getElementById("profit").textContent = `¥${profit.toLocaleString()}`;
   document.getElementById("profit-rate").textContent = `${profitRate}%`;
+
+  // 🌟 色分けアラートをここでやる！！
+  const profitElement = document.getElementById("profit");
+  const profitRateElement = document.getElementById("profit-rate");
+
+  if (profit < 0) {
+    profitElement.style.color = "red";
+  } else {
+    profitElement.style.color = "black";
+  }
+
+  if (parseFloat(profitRate) < 0) {
+    profitRateElement.style.color = "red";
+  } else if (parseFloat(profitRate) <= 20) {
+    profitRateElement.style.color = "orange";
+  } else {
+    profitRateElement.style.color = "black";
+  }
 }
+
 
 // セル編集時
 function onCellEdited(cell) {
@@ -199,6 +268,8 @@ function initializeButtons() {
   document.getElementById("add-row-btn").addEventListener("click", addNewRow);
   document.getElementById("save-btn").addEventListener("click", saveEstimate);
   document.getElementById("apply-profit-rate-btn").addEventListener("click", applyProfitRateToAllRows);
+  document.getElementById('recalc-profit-rate-btn').addEventListener('click', recalcProfitRates);
+
 }
 
 // 行を追加
@@ -232,4 +303,36 @@ function applyProfitRateToAllRows() {
   updateTotals();
   alert("✅ 目標利益率を適用しました！");
 }
+function recalcProfitRates() {
+  const rows = detailTable.getRows();
+  rows.forEach(row => {
+    const data = row.getData();
+    const costPrice = data.cost_price || 0;
+    const salePrice = data.sale_price || 0;
+    const quantity = data.quantity || 0;
+
+    // 🔥 新しく cost_subtotal, subtotal を再計算！
+    const costSubtotal = quantity * costPrice;
+    const subtotal = quantity * salePrice;
+
+    let profitRate = "-";
+    if (salePrice > 0) {
+      profitRate = ((salePrice - costPrice) / salePrice) * 100;
+      profitRate = profitRate.toFixed(1) + "%";
+    }
+
+    // 🔥 全部まとめて row.update する！
+    row.update({
+      cost_subtotal: costSubtotal,
+      subtotal: subtotal,
+      profit_rate: profitRate
+    });
+  });
+
+  updateTotals();  // 最後に合計も更新！！
+
+  console.log("✅ 明細利益率＋小計金額＋合計すべて再計算しました！");
+}
+
+
 
