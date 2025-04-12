@@ -283,6 +283,34 @@ def create_estimate():
         print("保存エラー:", e)
         return jsonify({"error": str(e)}), 500
 
+function initializeButtons() {
+  document.getElementById('add-row-btn').addEventListener('click', addRow);
+  document.getElementById('save-btn').addEventListener('click', saveEstimate);
+  document.getElementById('apply-profit-rate-btn').addEventListener('click', applyTargetProfitRate);
+
+  // 🌟追加！利益率再計算ボタン
+  document.getElementById('recalc-profit-rate-btn').addEventListener('click', recalcProfitRates);
+}
+
+function recalcProfitRates() {
+  const rows = detailTable.getRows();  // 全行取得！
+  rows.forEach(row => {
+    const data = row.getData();
+    const costPrice = data.cost_price || 0;
+    const salePrice = data.sale_price || 0;
+    let profitRate = "-";
+
+    if (salePrice > 0) {
+      profitRate = ((salePrice - costPrice) / salePrice) * 100;
+      profitRate = profitRate.toFixed(1) + "%";
+    }
+
+    // 🌟row.updateで画面だけ更新！
+    row.update({ profit_rate: profitRate });
+  });
+
+  console.log("✅ 項目ごとの利益率を再計算しました！");
+}
 
     
     

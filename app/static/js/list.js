@@ -13,14 +13,13 @@ document.addEventListener("DOMContentLoaded", function () {
   function formatActionButtons(cell, formatterParams) {
     return `
       <button class="edit-btn" style="margin-right:5px;">✏️ 編集</button>
-      <button class="delete-btn">🗑 削除</button>
+      <button class="delete-btn" style="margin-right:5px;">🗑 削除</button>
     `;
   }
 
   // 📌 明細を開く
   function expandRow(row) {
-    collapseRow(row); // いったん全部閉じる
-
+    collapseRow(row);
     const container = document.createElement("div");
     container.style.padding = "10px";
     container.style.background = "#f9f9f9";
@@ -50,7 +49,6 @@ document.addEventListener("DOMContentLoaded", function () {
         row.getElement().appendChild(container);
         row.getElement().classList.add("expanded");
 
-        // プラスをマイナスに変える
         const toggleCellElement = row.getElement().querySelector(".tabulator-cell:first-child");
         if (toggleCellElement) {
           toggleCellElement.innerText = "−";
@@ -77,10 +75,8 @@ document.addEventListener("DOMContentLoaded", function () {
         c.remove();
       }
     });
-
     row.getElement().classList.remove("expanded");
 
-    // マイナスをプラスに戻す
     const toggleCellElement = row.getElement().querySelector(".tabulator-cell:first-child");
     if (toggleCellElement) {
       toggleCellElement.innerText = "+";
@@ -116,12 +112,11 @@ document.addEventListener("DOMContentLoaded", function () {
         title: "操作",
         field: "actions",
         formatter: formatActionButtons,
-        width: 300,
+        width: 200,
         hozAlign: "center",
         cellClick: function (e, cell) {
-          console.log("操作列クリック発動！！");
           const rowData = cell.getRow().getData();
-          console.log("rowData:", rowData);
+          console.log("操作列クリック発動！！", rowData);
 
           if (e.target.classList.contains("edit-btn")) {
             console.log("✏️ 編集ボタン押された！");
@@ -148,6 +143,22 @@ document.addEventListener("DOMContentLoaded", function () {
             }
           }
         },
+      },
+      {
+        title: "Excel出力",
+        formatter: function (cell, formatterParams, onRendered) {
+          return `<button class="export-btn">📥 出力</button>`;
+        },
+        width: 150,
+        hozAlign: "center",
+        cellClick: function (e, cell) {
+          const rowData = cell.getRow().getData();
+          console.log("📥 エクセル出力ボタン押された！", rowData);
+
+          // ここだけあればいい！！⬇️
+          const downloadUrl = `/api/export_excel/${rowData.id}`;
+          window.location.href = downloadUrl;
+        }
       },
     ],
   });

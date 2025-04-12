@@ -1,7 +1,13 @@
 from flask import Blueprint, request, jsonify
 from app.models import Estimate, EstimateDetail
 from app import db
+from flask import send_file
+from openpyxl import load_workbook
+import io
 from datetime import datetime
+import os
+from io import BytesIO  # ← これを追加！
+
 
 api_bp = Blueprint('api', __name__, url_prefix='/api')
 
@@ -126,19 +132,60 @@ def update_estimate_details(estimate_id):
 
 # ✅ 見積＋明細を削除
 # ✅ 特定IDの見積データ取得
-@api_bp.route('/estimates/<int:estimate_id>', methods=['GET'])  # ★ここGETな！
-def get_estimate(estimate_id):
-    estimate = Estimate.query.get(estimate_id)
-    if not estimate:
-        return jsonify({"message": "見積が存在しません"}), 404
+# --- 追加API ---
+@api_bp.route('/export_excel/<int:estimate_id>', methods=['GET'])
+def export_excel(estimate_id):
+    try:
+        # 見積ヘッダー情報を取得
+        estimate = Estimate.query.get(estimate_id)
+        if not estimate:
+            return jsonify({"error": "見積データが見つかりません"}), 404
+        
+        # 明細情報を取得
+        details = EstimateDetail.query.filter_by(estimate_id=estimate_id).all()
+        
+         # 🔥 ここ！！この直後にprintを入れる！！！
+        print("案件名:", estimate.project_name)
+        print("お客様名:", estimate.customer_name)
+        print("明細件数:", len(details))
 
-    return jsonify({
-        "id": estimate.id,
-        "project_name": estimate.project_name,
-        "customer_name": estimate.customer_name,
-        "total_cost": estimate.total_cost,
-        "total_list_price": estimate.total_list_price,
-        "quantity": estimate.quantity
-    })
+        # Excelテンプレートを開く
+        template_path = os.path.join(os.path.dirname(__file__), '../../Excel原紙.xlsx')
+        wb = load_workbook(template_path)
+        ws = wb.active
+
+        # 案件名・お客様名を書く
+        ws["E15"] = estimate.project_name
+        ws["A4"] = estimate.customer_name
+
+        # 明細を書く
+        start_row = 20
+        for idx, d in enumerate(details):
+            row = start_row + idx
+            ws[f"C{row}"] = f"{d.item}（{d.model}）"
+            ws[f"U{row}"] = d.quantity
+            ws[f"Y{row}"] = d.sale_price
+            ws[f"AE{row}"] = d.subtotal
+
+        # 保存用バッファ
+        output_stream = BytesIO()
+        wb.save(output_stream)
+        output_stream.seek(0)
+
+        # ファイル名を動的に（案件名_日付）
+        from datetime import datetime
+        today_str = datetime.now().strftime("%Y%m%d")
+        filename = f"{estimate.project_name}_{today_str}.xlsx"
+
+        return send_file(
+            output_stream,
+            as_attachment=True,
+            download_name=filename,
+            mimetype="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+        )
+
+    except Exception as e:
+        print("エクセル出力エラー:", e)
+        return jsonify({"error": str(e)}), 500
 
 

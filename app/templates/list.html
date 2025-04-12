@@ -19,5 +19,17 @@
   </div>
 
   <script src="{{ url_for('static', filename='js/list.js') }}"></script>
+
+  <!-- 保存済み一覧（list.html） -->
+<script>
+  function exportExcel(estimateId) {
+    window.location.href = `/api/export_excel/${estimateId}`;
+  }
+  </script>
+  
+  <div id="estimate-list-table" style="margin-top:20px;"></div>
+  
+  <script src="{{ url_for('static', filename='js/list.js') }}"></script>
+  
 </body>
 </html>
