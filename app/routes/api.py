@@ -155,6 +155,13 @@ def export_excel(estimate_id):
         # ✅ お客様名・案件名
         ws["F4"] = estimate.customer_name or ""
         ws["F16"] = estimate.project_name or ""
+        
+        # 🔥 見積番号（ID）をセット
+        ws["I2"] = estimate.id
+
+        # 🔥 今日の日付をセット
+        today_str_display = datetime.now().strftime("%Y/%m/%d")
+        ws["I3"] = today_str_display
 
         # ✅ 明細データ
         start_row = 21
