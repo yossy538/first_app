@@ -6,6 +6,8 @@ from openpyxl.worksheet.pagebreak import Break
 from io import BytesIO
 import os
 from datetime import datetime
+import subprocess
+
 
 api_bp = Blueprint('api', __name__, url_prefix='/api')
 
@@ -132,65 +134,73 @@ def get_estimate(estimate_id):
         "quantity": estimate.quantity
     })
 
-# ✅ Excel出力
-# ✅ Excel出力
+## --- Excel出力＆PDF変換 ---
 @api_bp.route('/export_excel/<int:estimate_id>', methods=['GET'])
 def export_excel(estimate_id):
     try:
+        # --- データ取得 ---
         estimate = Estimate.query.get(estimate_id)
         if not estimate:
             return jsonify({"error": "見積データが見つかりません"}), 404
 
         details = EstimateDetail.query.filter_by(estimate_id=estimate_id).all()
 
+        # --- Excelテンプレートを開く ---
         template_path = os.path.join(os.path.dirname(__file__), '../../Excel原紙.xlsx')
         wb = load_workbook(template_path)
         ws = wb.active
 
-        # 🔥 すべての結合セルを解除する
+        # --- 結合解除 ---
         merged_ranges = list(ws.merged_cells.ranges)
         for merged_range in merged_ranges:
             ws.unmerge_cells(str(merged_range))
 
-        # ✅ お客様名・案件名
+        # --- ヘッダー情報書き込み ---
         ws["F4"] = estimate.customer_name or ""
         ws["F16"] = estimate.project_name or ""
-        
-        # 🔥 見積番号（ID）をセット
         ws["I2"] = estimate.id
+        ws["I3"] = datetime.now().strftime("%Y/%m/%d")
 
-        # 🔥 今日の日付をセット
-        today_str_display = datetime.now().strftime("%Y/%m/%d")
-        ws["I3"] = today_str_display
-
-        # ✅ 明細データ
+        # --- 明細データ書き込み ---
         start_row = 21
         for idx, d in enumerate(details):
             row = start_row + idx
-
             ws[f"A{row}"] = f"{d.item}（{d.model}）" if d.model else d.item
             ws[f"G{row}"] = d.quantity
             ws[f"H{row}"] = d.sale_price
             ws[f"I{row}"] = d.subtotal
 
-        # ✅ 合計金額
+        # --- 合計金額書き込み ---
         total = sum(d.subtotal for d in details)
         ws["I39"] = total
         ws["F12"] = total
 
-        # 🔥 保存
-        output_stream = BytesIO()
-        wb.save(output_stream)
-        output_stream.seek(0)
-
+        # --- 🔥 ファイル保存パス ---
         today_str = datetime.now().strftime("%Y%m%d")
-        filename = f"{estimate.project_name}_{today_str}.xlsx"
+        filename_base = f"{estimate.project_name}_{today_str}"
+        excel_path = os.path.join(os.getcwd(), f"{filename_base}.xlsx")
+        pdf_path = os.path.join(os.getcwd(), f"{filename_base}.pdf")
 
+        # --- Excelファイル保存 ---
+        wb.save(excel_path)
+
+        # --- LibreOfficeでPDF変換 ---
+        libreoffice_path = "/Applications/LibreOffice.app/Contents/MacOS/soffice"
+        command = [
+            libreoffice_path,
+            "--headless",
+            "--convert-to", "pdf",
+            excel_path,
+            "--outdir", os.getcwd()
+        ]
+        subprocess.run(command, check=True)
+
+        # --- PDFをブラウザに送信 ---
         return send_file(
-            output_stream,
+            pdf_path,
             as_attachment=True,
-            download_name=filename,
-            mimetype="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+            download_name=f"{filename_base}.pdf",
+            mimetype="application/pdf"
         )
 
     except Exception as e:
