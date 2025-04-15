@@ -1,107 +1,212 @@
 body {
-    font-family: Arial, sans-serif;
-    margin: 20px;
-    background-color: #f8f8f8;
-  }
-  
-  h2 {
-    color: #333;
-    text-align: center;
-  }
-  
-  .container {
-    max-width: 1000px;
-    margin: 0 auto;
-    background: #fff;
-    padding: 20px;
-    border-radius: 10px;
-    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
-  }
-  
-  button {
-    margin: 10px 0;
-    padding: 10px 15px;
-    font-size: 14px;
-    cursor: pointer;
-    border: none;
-    background-color: #4CAF50;
-    color: white;
-    border-radius: 5px;
-  }
-  
-  .delete-btn {
-    color: white;
-    background-color: red;
-    border: none;
-    padding: 5px 10px;
-    cursor: pointer;
-    border-radius: 3px;
-  }
-  
-  #tabulator-table {
-    margin-top: 20px;
-  }
-  
-  /* 合計表示 */
-  .totals {
-    margin-top: 30px;
-    padding: 10px;
-    background-color: #eee;
-    border-radius: 5px;
-  }
-  
-  .totals p {
-    margin: 6px 0;
-    font-weight: bold;
-    font-size: 16px;
-  }
+  font-family: Arial, sans-serif;
+  margin: 20px;
+  background-color: #f8f8f8;
+}
 
-  .section-divider {
-    margin: 40px 0;
-    border: none;
-    border-top: 1px solid #ccc;
-  }
-  
-  /* セクション区切り線 */
+h2 {
+  color: #333;
+  text-align: center;
+}
+
+.container {
+  max-width: 1000px;
+  margin: 0 auto;
+  background: #fff;
+  padding: 20px;
+  border-radius: 10px;
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+}
+
+/* === 基本ボタンスタイル === */
+button {
+  margin: 10px 5px;
+  padding: 10px 20px;
+  font-size: 16px;
+  cursor: pointer;
+  border: 1px solid #d0d0d0;
+  background-color: #f5f5f7;
+  color: #333;
+  border-radius: 12px;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+  transition: all 0.2s ease-in-out;
+}
+
+button:hover {
+  background-color: #e0e0e5;
+}
+
+button:active {
+  transform: translateY(1px);
+  box-shadow: 0 0px 1px rgba(0, 0, 0, 0.1);
+}
+
+/* ✅ 新しい見積制作用の特別ボタン */
+.primary-btn {
+  background-color: #007aff; /* Appleブルー */
+  color: white;
+  border: none;
+}
+
+.primary-btn:hover {
+  background-color: #006ae6;
+}
+
+.primary-btn:active {
+  background-color: #0055cc;
+}
+
+/* ❌ 削除ボタン */
+.delete-btn {
+  background-color: #ff3b30; /* Appleレッド */
+  color: white;
+  border: none;
+}
+
+.delete-btn:hover {
+  background-color: #e62e26;
+}
+
+.delete-btn:active {
+  background-color: #cc241f;
+}
+
+/* === その他 === */
+#tabulator-table {
+  margin-top: 20px;
+}
+
+.totals {
+  margin-top: 30px;
+  padding: 10px;
+  background-color: #eee;
+  border-radius: 5px;
+}
+
+.totals p {
+  margin: 6px 0;
+  font-weight: bold;
+  font-size: 16px;
+}
+
 .section-divider {
-    margin: 40px 0;
-    border: none;
-    border-top: 1px solid #ccc;
-  }
-  
-  /* セクションの見出し */
-  .section-heading {
-    font-size: 20px;
-    font-weight: bold;
-    margin-bottom: 15px;
-    color: #333;
-    text-align: left;
-  }
-  
-  .form-area {
-    margin-bottom: 20px;
-  }
-  .form-area label {
-    margin-right: 8px;
-  }
-  .form-area input {
-    margin-right: 20px;
-    padding: 4px 8px;
-  }
-  
-  .new-estimate-btn {
-    display: inline-block;
-    padding: 10px 20px;
-    margin-bottom: 20px;
-    background-color: #4CAF50; /* さわやかグリーン */
-    color: white;
-    font-size: 18px;
-    text-decoration: none;
-    border-radius: 8px;
-    transition: background-color 0.3s ease;
-  }
-  
-  .new-estimate-btn:hover {
-    background-color: #45a049; /* ホバー時ちょっと濃くなる */
-  }
-  
+  margin: 40px 0;
+  border: none;
+  border-top: 1px solid #ccc;
+}
+
+.section-heading {
+  font-size: 20px;
+  font-weight: bold;
+  margin-bottom: 15px;
+  color: #333;
+  text-align: left;
+}
+
+.form-area {
+  margin-bottom: 20px;
+}
+
+.form-area label {
+  margin-right: 8px;
+}
+
+.form-area input {
+  margin-right: 20px;
+  padding: 4px 8px;
+}
+
+/* 🔥 新しい見積作成のリンクボタン */
+.new-estimate-btn {
+  display: inline-block;
+  padding: 10px 20px;
+  margin-bottom: 20px;
+  background-color: #4CAF50;
+  color: white;
+  font-size: 18px;
+  text-decoration: none;
+  border-radius: 8px;
+  transition: background-color 0.3s ease;
+}
+
+.new-estimate-btn:hover {
+  background-color: #45a049;
+}
+
+.edit-btn {
+  background-color: #f5f5f7; 
+  color: #333;
+  border: 1px solid #d0d0d0;
+  padding: 6px 12px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 14px;
+  transition: background-color 0.2s ease, transform 0.1s ease;
+}
+
+.edit-btn:hover {
+  background-color: #007aff;
+}
+
+.edit-btn:active {
+  transform: translateY(1px);
+}
+
+.delete-btn {
+  background-color: #f5f5f7; /* 通常時はグレー */
+  color: #333; /* 文字は黒系 */
+  border: 1px solid #d0d0d0;
+  padding: 6px 12px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 14px;
+  transition: all 0.2s ease, transform 0.1s ease;
+}
+
+.delete-btn:hover {
+  background-color: #ff3b30; /* ホバーしたら赤くなる！ */
+  color: white; /* 文字も白にチェンジ */
+  border: none; /* 枠線も消すとさらにAppleっぽい */
+}
+
+.delete-btn:active {
+  transform: translateY(1px);
+}
+
+.detail-delete-btn {
+  background-color: transparent;
+  border: none;
+  padding: 5px;
+  border-radius: 50%;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  position: relative;
+  width: 40px;
+  height: 40px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* ❎アイコン */
+.delete-icon {
+  color: rgba(204, 0, 0, 0.2); /* 通常時は超薄い赤 */
+  font-size: 10px;
+  transition: all 0.3s ease;
+}
+
+/* ホバー時 */
+.detail-delete-btn:hover {
+  background-color: rgba(255, 59, 48, 0.1); /* ふわっと赤背景 */
+}
+
+.detail-delete-btn:hover .delete-icon {
+  color: #ff3b30; /* 濃い赤にハイライト */
+  font-size: 15px; /* ちょっと大きくして浮かす */
+  transform: scale(1.1);
+}
+
+/* クリックしたとき */
+.detail-delete-btn:active .delete-icon {
+  transform: scale(0.95);
+}

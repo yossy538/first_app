@@ -156,10 +156,10 @@ def export_excel(estimate_id):
             ws.unmerge_cells(str(merged_range))
 
         # --- ヘッダー情報書き込み ---
-        ws["F4"] = estimate.customer_name or ""
+        ws["A4"] = estimate.customer_name or ""
         ws["F16"] = estimate.project_name or ""
-        ws["I2"] = estimate.id
-        ws["I3"] = datetime.now().strftime("%Y/%m/%d")
+        ws["J2"] = estimate.id
+        ws["J3"] = datetime.now().strftime("%Y/%m/%d")
 
         # --- 明細データ書き込み ---
         start_row = 21
@@ -173,7 +173,7 @@ def export_excel(estimate_id):
         # --- 合計金額書き込み ---
         total = sum(d.subtotal for d in details)
         ws["I39"] = total
-        ws["F12"] = total
+        ws["A12"] = total
 
         # --- 🔥 ファイル保存パス ---
         today_str = datetime.now().strftime("%Y%m%d")
@@ -183,6 +183,7 @@ def export_excel(estimate_id):
 
         # --- Excelファイル保存 ---
         wb.save(excel_path)
+        print(f"✅ Excelファイル保存完了！保存先: {os.path.abspath(excel_path)}")
 
         # --- LibreOfficeでPDF変換 ---
         libreoffice_path = "/Applications/LibreOffice.app/Contents/MacOS/soffice"

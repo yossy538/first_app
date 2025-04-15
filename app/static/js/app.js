@@ -122,12 +122,14 @@ function initializeDetailTable() {
         
         { 
           title: "操作", 
-          formatter: "buttonCross", 
-          width: 100, 
-          hozAlign: "center",   // ✅ここが正解！！
+          formatter: function(cell, formatterParams) {
+            return `<button class="detail-delete-btn"><span class="delete-icon">❌</span></button>`;
+          },
+          width: 100,
+          hozAlign: "center",
           headerSort: false,
           cellClick: function(e, cell) {
-            cell.getRow().delete();  // ❌ボタン押した行を即削除！
+            cell.getRow().delete();
           }
         }
       ],
