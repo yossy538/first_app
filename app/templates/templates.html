@@ -1,0 +1,20 @@
+<!-- templates/templates.html -->
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <title>テンプレート一覧</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+ 
+</head>
+<body>
+  <div class="container">
+    <h2>💾 保存済みテンプレート一覧</h2>
+    <div id="template-list"></div>
+    <button onclick="location.href='/'">🏠 見積作成に戻る</button>
+  </div>
+
+  <script src="{{ url_for('static', filename='js/template_list.js') }}"></script>
+
+</body>
+</html>

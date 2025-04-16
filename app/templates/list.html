@@ -15,10 +15,20 @@
     <h2>保存済み見積一覧</h2>
     <button onclick="location.href='/'" class="primary-btn">📝 新しい見積を作成</button>
 
+    <div style="margin-bottom: 1rem;">
+      <a href="/templates">
+        <button>📂 テンプレート一覧へ</button>
+      </a>
+    </div>
+    
+
     <div id="estimate-list-table" style="margin-top:20px;"></div>
   </div>
 
   <script src="{{ url_for('static', filename='js/list.js') }}"></script>
+
+  
+  
 
   <!-- 保存済み一覧（list.html） -->
 <script>
