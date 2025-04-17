@@ -650,21 +650,21 @@ document.getElementById("save-template-btn").addEventListener("click", () => {
   const templateName = isEditMode ? null : prompt("保存するテンプレート名を入力してください:");
   if (!templateId && !templateName) return;
 
-  const projectName = document.getElementById("project-name").value;
-  const customerName = document.getElementById("customer-name").value;
-  const targetProfitRate = parseFloat(document.getElementById("target-profit-rate").value) || 0;
-  const category = document.getElementById("template-category")?.value || "";  // ← 追加！
-  const details = detailTable.getData();
-  
-  const payload = {
-    template_name: templateName,
-    project_name: projectName,
-    customer_name: customerName,
-    target_profit_rate: targetProfitRate,
-    category: category,  // ← OK！
-    details: details
-  };
-  
+const projectName = document.getElementById("project-name").value;
+const customerName = document.getElementById("customer-name").value;
+const targetProfitRate = parseFloat(document.getElementById("target-profit-rate").value) || 0;
+const category = document.getElementById("template-category")?.value || "";  // ← 追加！
+const details = detailTable.getData();
+
+const payload = {
+  template_name: templateName,
+  project_name: projectName,
+  customer_name: customerName,
+  target_profit_rate: targetProfitRate,
+  category: category,  // ← OK！
+  details: details
+};
+
 
   // ✅ 編集モードなら PUT、通常は POST
   const url = isEditMode ? `/api/templates/${templateId}` : "/api/templates";

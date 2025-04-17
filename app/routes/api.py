@@ -8,6 +8,8 @@ import os
 from datetime import datetime
 import subprocess
 
+from app.models.database import connect_db
+
 
 api_bp = Blueprint('api', __name__, url_prefix='/api')
 
@@ -207,3 +209,125 @@ def export_excel(estimate_id):
     except Exception as e:
         print("エクセル出力エラー:", e)
         return jsonify({"error": str(e)}), 500
+    
+    
+# ✅ テンプレート取得API
+@api_bp.route("/templates/<int:id>", methods=["GET"])
+def get_template(id):
+    try:
+        conn = connect_db()
+        cursor = conn.cursor()
+
+        cursor.execute("SELECT * FROM estimate_templates WHERE id = ?", (id,))
+        template = cursor.fetchone()
+
+        if not template:
+            return jsonify({"error": "テンプレートが見つかりません"}), 404
+
+        template_dict = {
+            "id": template[0],
+            "template_name": template[1],
+            "project_name": template[2],
+            "customer_name": template[3],
+            "target_profit_rate": template[4],
+            "category": template[5],
+        }
+
+        cursor.execute("SELECT * FROM estimate_template_details WHERE template_id = ?", (id,))
+        rows = cursor.fetchall()
+
+        details = []
+        for row in rows:
+            details.append({
+                "item": row[2],
+                "model": row[3],
+                "quantity": row[4],
+                "unit": row[5],
+                "cost_price": row[6],
+                "sale_price": row[7],
+                "cost_subtotal": 0,  # 今は仮に0
+                "subtotal": 0       # 今は仮に0
+            })
+
+
+        template_dict["details"] = details
+        return jsonify(template_dict)
+
+    except Exception as e:
+        print("テンプレート取得エラー:", e)
+        return jsonify({"error": "サーバーエラー"}), 500
+
+
+@api_bp.route("/templates", methods=["POST"])
+def save_template():
+    try:
+        data = request.get_json()
+
+        conn = connect_db()
+        cursor = conn.cursor()
+
+        cursor.execute("""
+            INSERT INTO estimate_templates (template_name, project_name, customer_name, target_profit_rate, category)
+            VALUES (?, ?, ?, ?, ?)
+        """, (
+            data["template_name"],
+            data.get("project_name", ""),
+            data.get("customer_name", ""),
+            data.get("target_profit_rate", 0),
+            data.get("category", "")
+        ))
+
+        template_id = cursor.lastrowid
+
+        for d in data.get("details", []):
+            cursor.execute("""
+                INSERT INTO estimate_template_details (template_id, item, model, quantity, unit, cost_price, sale_price, cost_subtotal, subtotal)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+            """, (
+                template_id,
+                d.get("item", ""),
+                d.get("model", ""),
+                d.get("quantity", 0),
+                d.get("unit", ""),
+                d.get("cost_price", 0),
+                d.get("sale_price", 0),
+                d.get("cost_subtotal", 0),
+                d.get("subtotal", 0)
+            ))
+
+        conn.commit()
+        conn.close()
+
+        return jsonify({"message": "✅ テンプレートを保存しました！"})
+
+    except Exception as e:
+        import traceback
+        traceback.print_exc()
+        print("テンプレート保存エラー:", e)
+        return jsonify({"error": "テンプレート保存に失敗しました"}), 500
+
+@api_bp.route("/templates", methods=["GET"])
+def get_templates():
+    try:
+        conn = connect_db()
+        cursor = conn.cursor()
+
+        cursor.execute("SELECT * FROM estimate_templates")
+        rows = cursor.fetchall()
+
+        result = []
+        for row in rows:
+            result.append({
+                "id": row[0],
+                "template_name": row[1],
+                "project_name": row[2],
+                "customer_name": row[3],
+                "target_profit_rate": row[4],
+                "category": row[5],
+            })
+
+        return jsonify(result)
+
+    except Exception as e:
+        print("テンプレート一覧取得エラー:", e)
+        return jsonify({"error": "取得に失敗しました"}), 500

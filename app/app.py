@@ -11,19 +11,24 @@ import openpyxl
 from flask import Flask, jsonify, send_file, render_template, Response, request
 
 # ==== 3. 自作モジュール ====
+# ==== 3. 自作モジュール ====
 from app.models import db
 from app.routes.main import main_bp
 from app.routes.api import api_bp
+from app.routes.upload_template_excel import upload_bp  # ← ここでまとめてimport！
 
 # ==== 4. Flaskアプリ初期化 ====
-app = Flask(__name__, template_folder='app/templates', static_folder='app/static')
+app = Flask(__name__, template_folder='templates', static_folder='static')
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///../database/estimates.db'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
 db.init_app(app)
 
+# Blueprintを一気に登録
 app.register_blueprint(main_bp)
 app.register_blueprint(api_bp)
+app.register_blueprint(upload_bp)  # ← これがちゃんと呼ばれるように！
+ 
 
 # ==== 5. 定数・共通関数 ====
 DB_PATH = os.path.join(os.path.dirname(__file__), "database", "estimates.db")
@@ -416,3 +421,5 @@ if __name__ == "__main__":
     print(f"\U0001F4C1 使用しているDBパス: {DB_PATH}")
     create_template_tables()  # ← 💥これを一度だけ実行！
     app.run(debug=True, host="127.0.0.1", port=5002)
+    
+

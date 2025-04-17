@@ -17,6 +17,10 @@ document.addEventListener("DOMContentLoaded", function () {
     `;
   }
 
+
+
+
+
   // 📌 明細を開く
   function expandRow(row) {
     collapseRow(row);

@@ -1,11 +1,14 @@
-from flask import Blueprint, request, jsonify
-from app.models import Estimate, EstimateDetail  # models からちゃんとインポート！
-from app import db
+# app/routes/main.py
+from flask import Blueprint, render_template
 
-api_bp = Blueprint('api', __name__, url_prefix='/api')
+main_bp = Blueprint("main", __name__)
 
-@api_bp.route('/estimates', methods=['GET'])
-def get_estimates():
-    estimates = Estimate.query.all()
-    result = [e.to_dict() for e in estimates]
-    return jsonify(result)
+@main_bp.route("/")
+def index():
+    return render_template("index.html")
+
+@main_bp.route("/templates")
+def show_templates():
+    return render_template("templates.html")
+
+
